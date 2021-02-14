@@ -37,6 +37,10 @@
         lineX = width/maxX-2,
         lineY = height/maxY-2,
         KOEFF = 0.30;
+
+    function getRandomInRange(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
     
     function create(){
         for (var i = 0; i < maxX; i++)
@@ -63,10 +67,170 @@
                 {
                     stolb.classList.add("hero");
                 }
+                // начало алгоритма прима
+                if (!(i===0 && j===0))
+                {
+                    stolb.classList.add("wall");
+                }
                 row.appendChild(stolb);
             }
         }
+        // Продолжение алгоритма прима
+        x = 0;
+        y = 0;
+        let to_check = [];
+        if (y - 2 >= 0){
+            to_check.push([x, y - 2]);
+        }
+        if (y + 2< maxY){
+            to_check.push([x, y + 2]);
+        }
+        if (x - 2 >= 0){
+            to_check.push([x - 2, y]);
+        }
+        if (x + 2< maxX){
+            to_check.push([x + 2, y]);
+        }
+        // while (to_check.length > 0){
+        //     var index = getRandomInRange(0, to_check.length-1);
+        //     var cell = to_check[index];
+        //     x = cell[0];
+        //     y = cell[1];
+        //     document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y].classList.remove("wall");
+        //     console.log("Before:", to_check.length);
+        //     to_check.splice(index, 1);
+        //     console.log("After:", to_check.length);
+        //     d = ["north", "south", "east", "west"];
+        //     while (d.length > 0){
+        //         var dir_index = getRandomInRange(0, d.length-1)
+        //         switch(d[dir_index]){
+        //             case "north":
+        //                 if (y - 2 >= 0 && !("wall" in (document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y-2].classList))){
+        //                     document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y-1].classList.remove("wall");
+        //                     d = [];
+        //                 }
+        //                 break;
+        //             case "south":
+        //                 if (y + 2 < maxY && !("wall" in (document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y+2].classList))){
+        //                     document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y+1].classList.remove("wall");
+        //                     d = [];
+        //                 }
+        //                 break;
+        //             case "east":
+        //                 if (x - 2 >= 0 && !("wall" in (document.getElementsByClassName('row')[x - 2].getElementsByClassName('stolb')[y].classList))){
+        //                     document.getElementsByClassName('row')[x - 1].getElementsByClassName('stolb')[y].classList.remove("wall");
+        //                     d = [];
+        //                 }
+        //                 break;
+        //             case "west":
+        //                 if (x + 2 < maxX && !("wall" in (document.getElementsByClassName('row')[x + 2].getElementsByClassName('stolb')[y].classList))){
+        //                     document.getElementsByClassName('row')[x+1].getElementsByClassName('stolb')[y].classList.remove("wall");
+        //                     d = [];
+        //                 }
+        //                 break;
+        //         }
+        //         d.splice(dir_index, 1);
+
+        //         if (y - 2 >= 0 && !("wall" in (document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y-2].classList))){
+        //             to_check.push([x, y-2]);
+        //         }
+        //         if (y + 2 < maxY && !("wall" in (document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y+2].classList))){
+        //             to_check.push([x, y+2]);
+        //         }
+        //         if (x - 2 >= 0 && !("wall" in (document.getElementsByClassName('row')[x - 2].getElementsByClassName('stolb')[y].classList))){
+        //             to_check.push([x-2, y]);
+        //         }
+        //         if (x + 2 < maxX && !("wall" in (document.getElementsByClassName('row')[x + 2].getElementsByClassName('stolb')[y].classList))){
+        //             to_check.push([x+2, y]);
+        //         }
+        //     }
+        // }
+        console.log(generate_labirint(maxY, maxX));
         //hero(1, 1);
+    }
+
+    function generate_labirint(height, width){
+        let map = []
+        for (var h = 0; h < height; h++){
+            map.push([])
+            for (var w = 0; w < width; w++){
+                map[h].push("wall");
+            }
+        }
+
+        var x = 0;
+        var y = 0;
+        map[x][y] = "cell";
+        
+        to_check = [];
+        if (y - 2 >= 0){
+            to_check.push([x, y - 2]);
+        }
+        if (y + 2 < height){
+            to_check.push([x, y + 2]);
+        }
+        if (x - 2 >= 0){
+            to_check.push([x - 2, y]);
+        }
+        if (x + 2 < width){
+            to_check.push([x + 2, y]);
+        }
+        f = 0
+        while (to_check.length > 0 && f < 10){
+            var index = getRandomInRange(0, to_check.length-1);
+            var cell = to_check[index];
+            x = cell[0];
+            y = cell[1];
+            map[x][y] = "cell";
+            to_check.splice(index, 1);
+
+            d = ["north", "south", "east", "west"];
+            while (d.length > 0){
+                var dir_index = getRandomInRange(0, d.length - 1);
+                switch (d[dir_index]){
+                    case "north":
+                        if (y - 2 >= 0 && map[x][y - 2] === "cell"){
+                            map[x][y-1] = "cell";
+                            d = [];
+                        }
+                        break;
+                    case "south":
+                        if (y + 2 >= 0 && map[x][y + 2] === "cell"){
+                            map[x][y+1] = "cell";
+                            d = [];
+                        }
+                        break;
+                    case "east":
+                        if (x - 2 >= 0 && map[x - 2][y] === "cell"){
+                            map[x-1][y] = "cell";
+                            d = [];
+                        }
+                        break;
+                    case "west":
+                        if (x + 2 >= 0 && map[x + 2][y] === "cell"){
+                            map[x + 1][y] = "cell";
+                            d = [];
+                        }
+                        break;
+                }
+                d.splice(dir_index, 1);
+                if (y - 2 >= 0 && map[x][y - 2] === "cell"){
+                    to_check.push([x, y - 2]);
+                }
+                if (y + 2 >= 0 && map[x][y + 2] === "cell"){
+                    to_check.push([x, y + 2]);
+                }
+                if (x - 2 >= 0 && map[x - 2][y] === "cell"){
+                    to_check.push([x - 2, y]);
+                }
+                if (x + 2 >= 0 && map[x + 2][y] === "cell"){
+                    to_check.push([x + 2, y]);
+                }
+            }
+            f++;
+            console.log(map);
+        }
+        return map;
     }
 
     function hero(x, y){
