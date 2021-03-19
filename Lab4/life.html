@@ -17,6 +17,12 @@ body {
 .cell{
     background-color: #000;
 }
+.yell{
+    background-color: yellowgreen;
+}
+.devil{
+    background-color: rgb(83, 6, 0);
+}
 </style>
 <script>
     var 
@@ -30,15 +36,28 @@ body {
         KOEFF = 0.25,
         steps = 0,
         sum = 0,
+        sumW = 0,
+        sumB = 0,
         lastSum = 0,
-        preLastSum = 0;
+        preLastSum = 0,
+        flag = false,
+        i,
+        j;
 
     var timer = setInterval(function() {
         execute('calculate');
         execute('step');
+        steps++;
         preLastSum = lastSum;
         lastSum = sum;
-        sum = createCheckSum();
+        var obj = createCheckSum();
+        sum = obj.sum;
+        sumW = obj.sumW;
+        sumB = obj.sumB;
+        document.getElementById('gen').innerHTML = 'Generation: '+steps + "<br/>" + 
+            "white: " + parseInt(sumW / (sumW+sumB) * 100) + "%<br/>" + 
+            "black: " + parseInt(sumB / (sumW+sumB) * 100) +"%<br/>" + 
+            "total count: " + (sumW+sumB) + "<br/>";
         if (sum === preLastSum)  {
             clearInterval(timer);
             alert('The END');
@@ -47,14 +66,24 @@ body {
     
     function createCheckSum() {
         var 
-            sum = 0;
+            sum = 0,
+            sumW = 0,
+            sumB = 0;
 
         for (var i = 0; i < maxX; i++) {
             for (var j = 0; j < maxY; j++) {
                 sum += arr[i][j].value * arr[i][j].x * arr[i][j].y;
+                if (arr[i][j].value) {
+                    if (arr[i][j].type == 'W') sumW++;
+                        else sumB++;  
+                }
             }
         }
-        return sum;
+        return {
+            sum: sum,
+            sumW: sumW,
+            sumB: sumB
+        };
     }
 
     
@@ -66,7 +95,15 @@ body {
         this.newValue = 0;
         this.type = null;
         this.init = function() {
-            this.value = Math.random() < KOEFF ? 1 : 0;
+            if (Math.random() < KOEFF){
+                this.value = 1;
+                if (Math.random() < 0.5){
+                    this.type = 'B';
+                }
+                else{
+                    this.type = 'W';
+                }
+            }
             
         };
         this.getValue = function(type) {
@@ -74,10 +111,16 @@ body {
         },
         this.step = function() {
             if (this.value === 0 && this.newValue === 1){
-                document.body.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y].classList.add('cell');
+                if(this.type === 'B'){
+                    document.body.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y].classList.add('cell');
+                }
+                else{
+                    document.body.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y].classList.add('yell');
+                }
             }
             else if (this.value === 1 && this.newValue === 0){
                 document.body.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y].classList.remove('cell');
+                document.body.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y].classList.remove('yell');
             }
             this.value = this.newValue;
         },
@@ -89,16 +132,31 @@ body {
                 bottom = this.y < maxY - 1 ? this.y + 1 : 0,
                 count = 0;
             
-            count = arr[left][top].value + 
-                    arr[this.x][top].value + 
-                    arr[right][top].value + 
-                    arr[left][this.y].value + 
-                    arr[right][this.y].value + 
-                    arr[left][bottom].value + 
-                    arr[this.x][bottom].value + 
-                    arr[right][bottom].value;
+            countB = arr[left][top].getValue('B') + 
+                arr[this.x][top].getValue('B') + 
+                arr[right][top].getValue('B') + 
+                arr[left][this.y].getValue('B') + 
+                arr[right][this.y].getValue('B') + 
+                arr[left][bottom].getValue('B') + 
+                arr[this.x][bottom].getValue('B') + 
+                arr[right][bottom].getValue('B');
+            
+            countW = arr[left][top].getValue('W') + 
+                arr[this.x][top].getValue('W') + 
+                arr[right][top].getValue('W') + 
+                arr[left][this.y].getValue('W') + 
+                arr[right][this.y].getValue('W') + 
+                arr[left][bottom].getValue('W') + 
+                arr[this.x][bottom].getValue('W') + 
+                arr[right][bottom].getValue('W');
+            
+            count = countB + countW;
             if (this.value === 0 && count === 3) {
-                this.born();
+                if (countW > countB) {
+                    this.born('W');
+                } else {
+                    this.born('B');
+                }
             }
 
             if (this.value === 1 && count !== 2 && count !== 3) {
@@ -107,6 +165,7 @@ body {
         },
         this.born = function(type) {
             this.newValue = 1;
+            this.type = type;
         },
         this.die = function() {
             this.newValue = 0;
@@ -129,6 +188,11 @@ body {
                 arr[i][j].init();
             }
         }
+        var cont = document.getElementById("cont");
+        cont.addEventListener("click", function(event) {
+            i = arr.indexOf(event.target);
+            console.log(i);
+        });
         for (var i = 0; i < maxX; i++)
         {
             var table = document.body.getElementsByClassName('table')[0];
@@ -138,6 +202,10 @@ body {
             row.style.height = lineX+"px";
             row.style.width = width+"px";
             row.classList.add("row");
+            row.addEventListener("click", function(event) {
+                j = arr[i].indexOf(event.target);
+                console.log(j);
+            });
             table.appendChild(row);
             for (var j = 0; j < maxY; j++)
             {
@@ -147,11 +215,17 @@ body {
                 stolb.style.height = lineX+"px";
                 stolb.style.width = lineY+"px";
                 if (arr[i][j].value > 0){
-                    stolb.classList.add("cell");
+                    if (arr[i][j].type === 'B'){
+                        stolb.classList.add("cell");
+                    }
+                    else{
+                        stolb.classList.add("yell");
+                    }
                 }
                 row.appendChild(stolb);
             }
         }
+
         document.body.innerHTML += "<br/><button onclick='continue_game()'>Continue</button><button onclick='stop()'>Stop</button>";
     }
 
@@ -160,12 +234,20 @@ body {
     }   
     
     function continue_game() {
+        flag = false;
         timer = setInterval(function() {
         execute('calculate');
         execute('step');
         preLastSum = lastSum;
         lastSum = sum;
-        sum = createCheckSum();
+        var obj = createCheckSum();
+        sum = obj.sum;
+        sumW = obj.sumW;
+        sumB = obj.sumB;
+        document.getElementById('gen').innerHTML = 'Generation: '+steps + "<br/>" + 
+            "white: " + parseInt(sumW / (sumW+sumB) * 100) + "%<br/>" + 
+            "black: " + parseInt(sumB / (sumW+sumB) * 100) +"%<br/>" + 
+            "total count: " + (sumW+sumB) + "<br/>";
         if (sum === preLastSum)  {
             clearInterval(timer);
             alert('The END');
@@ -175,14 +257,18 @@ body {
 
     function stop() {
         clearInterval(timer);
+        flag = true;
     }
 
-    function nameDevilLand(){
-
+    function DevilLand(){
+        if (flag){
+            
+        }
     }
 </script>
 </head>
 <body onload="start();">
-    <div class="table"></div>
+    <div id='gen'></div>
+    <div class="table" id = "cont"></div>
 </body>
 </html>

@@ -44,6 +44,7 @@
         for (var i = 0; i < maxX; i++) {
             for (var j = 0; j < maxY; j++) {
                 sum += arr[i][j].value * arr[i][j].x * arr[i][j].y;
+                console.log(arr[i][j].x + " "+arr[i][j].y);
                 if (arr[i][j].value) {
                     if (arr[i][j].type == 'W') sumW++;
                         else sumB++;  
@@ -64,7 +65,6 @@
         this.newValue = 0;
         this.type = null;
         this.init = function() {
-            console.log(this.value);
             if (Math.random() < KOEFF){
                 this.value = 1;
                 if (Math.random() < 0.5){
@@ -77,7 +77,6 @@
             else if (Math.random() < KOEFFW){
                 this.type = 'wall';
             }
-            console.log(this.value);
         };
         this.display = function() {
             if (this.value === 1){
