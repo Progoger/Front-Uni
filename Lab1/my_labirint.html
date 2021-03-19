@@ -36,13 +36,21 @@
         maxY = prompt('Введите ширину игрового поля'),
         lineX = width/maxX-2,
         lineY = height/maxY-2,
-        KOEFF = 0.30;
+        KOEFF = 0.30,
+        map = [],
+        to_check = [],
+        start = [0, 0],
+        end = [maxX, maxY],
+        cur_x = 0,
+        cur_y = 0,
+        finished = false;
 
     function getRandomInRange(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
     }
     
     function create(){
+        generate_labirint(maxY, maxX);
         for (var i = 0; i < maxX; i++)
         {
             var table = document.body.getElementsByClassName('table')[0];
@@ -60,184 +68,161 @@
                 stolb.classList.add("stolb");
                 stolb.style.height = lineX+"px";
                 stolb.style.width = lineY+"px";
-                if (Math.random()<KOEFF && (i!==0 && j!==0 && i!==maxX-1 && j!==maxY-1)){
+                if (map[i][j] === "wall"){
                     stolb.classList.add("wall");
                 }
-                else if (i===0 && j===0)
-                {
+                else if (map[i][j] === "hero"){
                     stolb.classList.add("hero");
-                }
-                // начало алгоритма прима
-                if (!(i===0 && j===0))
-                {
-                    stolb.classList.add("wall");
                 }
                 row.appendChild(stolb);
             }
         }
-        // Продолжение алгоритма прима
-        x = 0;
-        y = 0;
-        let to_check = [];
-        if (y - 2 >= 0){
-            to_check.push([x, y - 2]);
-        }
-        if (y + 2< maxY){
-            to_check.push([x, y + 2]);
-        }
-        if (x - 2 >= 0){
-            to_check.push([x - 2, y]);
-        }
-        if (x + 2< maxX){
-            to_check.push([x + 2, y]);
-        }
-        // while (to_check.length > 0){
-        //     var index = getRandomInRange(0, to_check.length-1);
-        //     var cell = to_check[index];
-        //     x = cell[0];
-        //     y = cell[1];
-        //     document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y].classList.remove("wall");
-        //     console.log("Before:", to_check.length);
-        //     to_check.splice(index, 1);
-        //     console.log("After:", to_check.length);
-        //     d = ["north", "south", "east", "west"];
-        //     while (d.length > 0){
-        //         var dir_index = getRandomInRange(0, d.length-1)
-        //         switch(d[dir_index]){
-        //             case "north":
-        //                 if (y - 2 >= 0 && !("wall" in (document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y-2].classList))){
-        //                     document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y-1].classList.remove("wall");
-        //                     d = [];
-        //                 }
-        //                 break;
-        //             case "south":
-        //                 if (y + 2 < maxY && !("wall" in (document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y+2].classList))){
-        //                     document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y+1].classList.remove("wall");
-        //                     d = [];
-        //                 }
-        //                 break;
-        //             case "east":
-        //                 if (x - 2 >= 0 && !("wall" in (document.getElementsByClassName('row')[x - 2].getElementsByClassName('stolb')[y].classList))){
-        //                     document.getElementsByClassName('row')[x - 1].getElementsByClassName('stolb')[y].classList.remove("wall");
-        //                     d = [];
-        //                 }
-        //                 break;
-        //             case "west":
-        //                 if (x + 2 < maxX && !("wall" in (document.getElementsByClassName('row')[x + 2].getElementsByClassName('stolb')[y].classList))){
-        //                     document.getElementsByClassName('row')[x+1].getElementsByClassName('stolb')[y].classList.remove("wall");
-        //                     d = [];
-        //                 }
-        //                 break;
-        //         }
-        //         d.splice(dir_index, 1);
-
-        //         if (y - 2 >= 0 && !("wall" in (document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y-2].classList))){
-        //             to_check.push([x, y-2]);
-        //         }
-        //         if (y + 2 < maxY && !("wall" in (document.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y+2].classList))){
-        //             to_check.push([x, y+2]);
-        //         }
-        //         if (x - 2 >= 0 && !("wall" in (document.getElementsByClassName('row')[x - 2].getElementsByClassName('stolb')[y].classList))){
-        //             to_check.push([x-2, y]);
-        //         }
-        //         if (x + 2 < maxX && !("wall" in (document.getElementsByClassName('row')[x + 2].getElementsByClassName('stolb')[y].classList))){
-        //             to_check.push([x+2, y]);
-        //         }
-        //     }
-        // }
-        console.log(generate_labirint(maxY, maxX));
+        map[maxX-1][maxY-1] = "exit";
+        console.log(map);
+        find_exit();
         //hero(1, 1);
     }
 
     function generate_labirint(height, width){
-        let map = []
         for (var h = 0; h < height; h++){
             map.push([])
             for (var w = 0; w < width; w++){
                 map[h].push("wall");
             }
         }
-
-        var x = 0;
-        var y = 0;
-        map[x][y] = "cell";
         
-        to_check = [];
-        if (y - 2 >= 0){
-            to_check.push([x, y - 2]);
-        }
-        if (y + 2 < height){
-            to_check.push([x, y + 2]);
-        }
-        if (x - 2 >= 0){
-            to_check.push([x - 2, y]);
-        }
-        if (x + 2 < width){
-            to_check.push([x + 2, y]);
-        }
-        f = 0
-        while (to_check.length > 0 && f < 10){
-            var index = getRandomInRange(0, to_check.length-1);
-            var cell = to_check[index];
-            x = cell[0];
-            y = cell[1];
-            map[x][y] = "cell";
-            to_check.splice(index, 1);
-
-            d = ["north", "south", "east", "west"];
-            while (d.length > 0){
-                var dir_index = getRandomInRange(0, d.length - 1);
-                switch (d[dir_index]){
-                    case "north":
-                        if (y - 2 >= 0 && map[x][y - 2] === "cell"){
-                            map[x][y-1] = "cell";
-                            d = [];
-                        }
-                        break;
-                    case "south":
-                        if (y + 2 >= 0 && map[x][y + 2] === "cell"){
-                            map[x][y+1] = "cell";
-                            d = [];
-                        }
-                        break;
-                    case "east":
-                        if (x - 2 >= 0 && map[x - 2][y] === "cell"){
-                            map[x-1][y] = "cell";
-                            d = [];
-                        }
-                        break;
-                    case "west":
-                        if (x + 2 >= 0 && map[x + 2][y] === "cell"){
-                            map[x + 1][y] = "cell";
-                            d = [];
-                        }
-                        break;
+        x = 0;
+        y = 0;
+        amaze(0, 0, true);
+        while (to_check.length > 0){
+            var randomWall = to_check[Math.floor(Math.random() * to_check.length)],
+            host = randomWall[2],
+            opposite = [(host[0] + (randomWall[0]-host[0])*2), (host[1] + (randomWall[1]-host[1])*2)];
+            if(valid(opposite[0],opposite[1])){
+                if (map[opposite[0]][opposite[1]] === "maze"){
+                    to_check.splice(to_check.indexOf(randomWall), 1);
                 }
-                d.splice(dir_index, 1);
-                if (y - 2 >= 0 && map[x][y - 2] === "cell"){
-                    to_check.push([x, y - 2]);
-                }
-                if (y + 2 >= 0 && map[x][y + 2] === "cell"){
-                    to_check.push([x, y + 2]);
-                }
-                if (x - 2 >= 0 && map[x - 2][y] === "cell"){
-                    to_check.push([x - 2, y]);
-                }
-                if (x + 2 >= 0 && map[x + 2][y] === "cell"){
-                    to_check.push([x + 2, y]);
+                else{
+                    amaze(randomWall[0],randomWall[1],false);
+                    amaze(opposite[0],opposite[1],true);
                 }
             }
-            f++;
-            console.log(map);
-        }
-        return map;
+            else to_check.splice(to_check.indexOf(randomWall), 1);
     }
+    map[0][0] = 'hero';
+    return map;
+}
+
+    function valid(a,b) { 
+        if (a<maxX && a>=0 && b<maxY && b>=0)
+        {
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    function amaze(x,y,addBlockWalls) {
+    map[x][y] = 'maze';
+      if (addBlockWalls && valid(x,y+1) && (map[x][y+1] == 'wall')) to_check.push([x,  y+1 , [x, y]]);
+      if (addBlockWalls && valid(x,y-1) && (map[x][y-1] == 'wall')) to_check.push([x,  y-1 , [x, y]]);
+      if (addBlockWalls && valid(x+1,y) && (map[x+1][y] == 'wall')) to_check.push([ x+1 , y, [x, y]]);
+      if (addBlockWalls && valid(x-1,y) && (map[x-1][y] == 'wall')) to_check.push([ x-1, y, [x, y]]);
+  }
 
     function hero(x, y){
         var last = document.body.getElementsByClassName('hero')[0];
         last.classList.remove("hero");
         var tmp = document.body.getElementsByClassName('stolb')[y+x*maxX];
         tmp.classList.add("hero");
+    }
+
+    function find_path(){
+        map[start[0]][start[1]] = "1";
+        queue = start;
+        while (queue.length != 0) {
+       
+       var y = queue.shift();
+       var x = queue.shift();
+       var cur_val = parseInt(map[y][x]);
+
+       // check each of the neighbours
+       for (var ny = -1; ny <= 1; ny++) {
+           for (var nx = -1; nx <= 1; nx++) {
+               if (Math.abs(ny) == Math.abs(nx) || y+ny < 0 || y+ny >= maxY || x+nx < 0 || x+nx >= maxX) 
+                   continue;
+
+               if (map[y+ny][x+nx] == 'maze') {
+                   map[y+ny][x+nx] = (cur_val+1).toString();
+                   queue.push(y+ny);
+                   queue.push(x+nx);
+                   console.log((y+ny)+" "+(x+nx));
+               }
+
+           }
+       }
+    }
+
+    }
+    var i = 1;
+    find_exit = function(){
+        console.log(cur_x+" "+cur_y);
+        if (finished) return;
+        if (cur_x == maxX || cur_x < 0) return false;
+        if (cur_y == maxY || cur_y < 0) return false;
+
+        if (map[cur_x][cur_y] === "exit"){
+            hero(cur_x, cur_y);
+            finished = true;
+        }
+
+        if (map[cur_x][cur_y] === "wall" || map[cur_x][cur_y] === "been") return false;
+
+        map[cur_x][cur_y] = "been" + i;
+        console.log(map[cur_x][cur_y]);
+        hero(cur_x, cur_y);
+        if (cur_y != maxY-1 && (map[cur_x][cur_y+1] === "maze" || map[cur_x][cur_y+1] === "exit")) {
+            cur_y += 1;
+            i += 1;
+            setTimeout(find_exit, "100");
+        }
+        else if (cur_x != maxX-1 && (map[cur_x+1][cur_y] === "maze"||  map[cur_x+1][cur_y] === "exit")) {
+            cur_x += 1;
+            i += 1;
+            setTimeout(find_exit, "100");
+        }
+        else if (cur_x != 0 && (map[cur_x-1][cur_y] === "maze" || map[cur_x-1][cur_y] === "exit")) {
+            cur_x -= 1;
+            i += 1;
+            setTimeout(find_exit, "100");
+        }
+        else if (cur_y != 0 && (map[cur_x][cur_y-1] === "maze" || map[cur_x][cur_y-1] === "exit")) {
+            cur_y -= 1;
+            i += 1;
+            setTimeout(find_exit, "100");
+        }
+        else if (cur_x != maxX-1 && map[cur_x+1][cur_y] === ("been"+(i-1))) {
+            i -= 1;
+            cur_x += 1;
+            setTimeout(find_exit, "100");
+
+        }
+        else if (cur_x != 0 && map[cur_x-1][cur_y] === ("been"+(i-1))) {
+            i -= 1;
+            cur_x -= 1;
+            setTimeout(find_exit, "100");
+        }
+        else if (cur_y != maxY-1 && map[cur_x][cur_y+1] === ("been"+(i-1))) {
+            i -= 1;
+            cur_y += 1;
+            setTimeout(find_exit, "100");
+        }
+        else if (cur_y != 0 && map[cur_x][cur_y-1] === ("been"+(i-1))) {
+            i -= 1;
+            cur_y -= 1;
+            setTimeout(find_exit, "100");
+        }
     }
 </script>
 </html>

@@ -1,0 +1,241 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style>body { 
+    font-family: 'Courier New'; font-weight: bold; }
+    #gen { position: absolute; right: 10px; }
+</style>
+<script>
+    var 
+        arr = [],
+        maxX = 25,
+        maxY = 25,
+        KOEFF = 0.25,
+        KOEFFW = 0.10,
+        steps = 0,
+        sum = 0,
+        sumW = 0,
+        sumB = 0,
+        lastSum = 0,
+        preLastSum = 0;
+
+    var timer = setInterval(function() {
+        execute('calculate');
+        execute('step');
+        preLastSum = lastSum;
+        lastSum = sum;
+        var obj = createCheckSum();
+        sum = obj.sum;
+        sumW = obj.sumW;
+        sumB = obj.sumB;
+        show();
+        if (sum === preLastSum)  {
+            clearInterval(timer);
+            alert('The END');
+        }
+    }, 100);
+    
+    function createCheckSum() {
+        var 
+            sum = 0,
+            sumW = 0,
+            sumB = 0;
+
+        for (var i = 0; i < maxX; i++) {
+            for (var j = 0; j < maxY; j++) {
+                sum += arr[i][j].value * arr[i][j].x * arr[i][j].y;
+                if (arr[i][j].value) {
+                    if (arr[i][j].type == 'W') sumW++;
+                        else sumB++;  
+                }
+            }
+        }
+        return {
+            sum: sum,
+            sumW: sumW,
+            sumB: sumB
+        };
+    }
+
+    function Cell(x, y) {
+        this.x = x;
+        this.y = y;
+        this.value = 0;
+        this.newValue = 0;
+        this.type = null;
+        this.init = function() {
+            console.log(this.value);
+            if (Math.random() < KOEFF){
+                this.value = 1;
+                if (Math.random() < 0.5){
+                    this.type = 'B';
+                }
+                else{
+                    this.type = 'W';
+                }
+            }
+            else if (Math.random() < KOEFFW){
+                this.type = 'wall';
+            }
+            console.log(this.value);
+        };
+        this.display = function() {
+            if (this.value === 1){
+                return this.type == 'W' ? ' @ ' : ' █ ';
+            }
+            else if (this.type === 'wall') {
+                return ' W ';
+            }
+            else{
+                return ' . ';
+            }
+        },
+        this.getValue = function(type) {
+            return type == this.type ? this.value : 0;
+        },
+        this.step = function() {
+            this.value = this.newValue;
+        },
+        this.checkNeighbourWalls = function(){
+            var
+                left = this.x > 0 ? this.x - 1 : maxX - 1,
+                right = this.x < maxX - 1 ? this.x + 1 : 0,
+                top = this.y > 0 ? this.y - 1 : maxY - 1,
+                bottom = this.y < maxY - 1 ? this.y + 1 : 0;
+            if (arr[left][top].type ==='wall' || 
+                arr[this.x][top].type ==='wall' || 
+                arr[right][top].type ==='wall' ||
+                arr[left][this.y].type ==='wall' || 
+                arr[right][this.y].type ==='wall' ||
+                arr[left][bottom].type ==='wall' ||
+                arr[this.x][bottom].type ==='wall' || 
+                arr[right][bottom].type ==='wall'){
+                
+                return false;
+            }
+            else{
+                return true;
+            }
+        },
+        this.calculate = function() {
+            var 
+                left = this.x > 0 ? this.x - 1 : maxX - 1,
+                right = this.x < maxX - 1 ? this.x + 1 : 0,
+                top = this.y > 0 ? this.y - 1 : maxY - 1,
+                bottom = this.y < maxY - 1 ? this.y + 1 : 0,
+                countB = 0,
+                countW = 0,
+                count = 0;
+            
+            countB = arr[left][top].getValue('B') + 
+                    arr[this.x][top].getValue('B') + 
+                    arr[right][top].getValue('B') + 
+                    arr[left][this.y].getValue('B') + 
+                    arr[right][this.y].getValue('B') + 
+                    arr[left][bottom].getValue('B') + 
+                    arr[this.x][bottom].getValue('B') + 
+                    arr[right][bottom].getValue('B');
+            
+            countW = arr[left][top].getValue('W') + 
+                    arr[this.x][top].getValue('W') + 
+                    arr[right][top].getValue('W') + 
+                    arr[left][this.y].getValue('W') + 
+                    arr[right][this.y].getValue('W') + 
+                    arr[left][bottom].getValue('W') + 
+                    arr[this.x][bottom].getValue('W') + 
+                    arr[right][bottom].getValue('W');
+            
+            count = countB + countW;
+
+            if (this.value === 0 && count === 3 && this.type !== 'wall') {
+                if (countW > countB) {
+                    this.born('W');
+                } else {
+                    this.born('B');
+                }
+            }
+
+            if (this.value === 1 && count !== 2 && count !== 3) {
+                this.die();
+            }
+        },
+        this.born = function(type) {
+            this.newValue = 1;
+            this.type = type;
+        },
+        this.die = function() {
+            this.newValue = 0;
+        }
+    }
+    function show() {
+        steps++;
+        var sum = sumW + sumB;
+        var mainStr = "<div id='gen' onclick='makeDevilLand()'>Generation: " + 
+            steps + "<br/>" + 
+            "white: " + parseInt(sumW / sum * 100) + "%<br/>" + 
+            "black: " + parseInt(sumB / sum * 100) +"%<br/>" + 
+            "total count: " + sum + "<br/>" + 
+            "</div>";
+        for (var i = 0; i < maxX; i++) {
+            var str = "";
+            for (var j = 0; j < maxY; j++) {
+                 str += arr[i][j].display();
+            }
+            mainStr += "<div>"+str+"</div>";
+        }
+        document.body.innerHTML = mainStr+"<br/><button onclick='continue_game()'>Continue</button><button onclick='stop()'>Stop</button>";
+    }
+
+    function execute(action) {
+        for (var i = 0; i < maxX; i++) {
+            for (var j = 0; j < maxY; j++) {
+                arr[i][j][action]();
+            }
+        }
+    }
+
+    function create() {
+        for (var i = 0; i < maxX; i++) {
+            arr[i] = [];
+            for (var j = 0; j < maxY; j++) {
+                arr[i][j] = new Cell(i, j);
+            }
+        }
+    }
+
+    function start() {
+        create();
+        execute('init');
+        show();
+    }        
+
+    function continue_game() {
+        timer = setInterval(function() {
+        execute('calculate');
+        execute('step');
+        preLastSum = lastSum;
+        lastSum = sum;
+        var obj = createCheckSum();
+        sum = obj.sum;
+        sumW = obj.sumW;
+        sumB = obj.sumB;
+        show();
+        if (sum === preLastSum)  {
+            clearInterval(timer);
+            alert('The END');
+        }
+    }, 100);
+    }
+
+    function stop() {
+        clearInterval(timer);
+    }
+
+    function nameDevilLand(){
+
+    }
+</script>
+</head>
+<body onload="start();">
+</body>
+</html>

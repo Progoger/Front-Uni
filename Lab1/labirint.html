@@ -1,0 +1,25 @@
+<html>
+	<head>
+		<meta charset='utf-8'>
+		<link rel="stylesheet" type="text/css" href="maze.css">
+	</head>
+	<body>
+		<!-- <div id='maze'></div> -->
+		<!-- <div id='complete'><img alt='MISSION ACCOMPLISHED'src="http://www.androidtapp.com/wp-content/uploads/2012/05/Radiant-Defense-Mission-complete.png"></div> -->
+	</body>
+	<script>
+		var i=0;
+		 
+		f=function(){
+		 
+		   // тело цикла
+		   document.write (i);
+		 
+		   // счётчик и условие исполнения цикла  
+		   i=i+1; if (i<10) setTimeout(f, "1000");
+		};
+		 
+		f();
+		</script>
+		
+</html>

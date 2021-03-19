@@ -1,0 +1,163 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style>
+body {
+    margin: 0;
+    padding: 0;
+}
+.row{
+    display: block;
+}
+.stolb{
+    float: left;
+    display: block;
+    border: 1px solid #000;
+}
+.cell{
+    background-color: #000;
+}
+</style>
+<script>
+    var 
+        width = 600,
+        height = 600,
+        arr = [],
+        maxX = prompt('Введите длину игрового поля'),
+        maxY = prompt('Введите ширину игрового поля'),
+        lineX = width/maxX-2,
+        lineY = height/maxY-2,
+        KOEFF = 0.25,
+        steps = 0,
+        sum = 0,
+        lastSum = 0,
+        preLastSum = 0;
+
+    var timer = setInterval(function() {
+        execute('calculate');
+        execute('step');
+        preLastSum = lastSum;
+        lastSum = sum;
+        sum = createCheckSum();
+        if (sum === preLastSum)  {
+            clearInterval(timer);
+            alert('The END');
+        }
+    }, 300);
+    
+    function createCheckSum() {
+        var 
+            sum = 0;
+
+        for (var i = 0; i < maxX; i++) {
+            for (var j = 0; j < maxY; j++) {
+                sum += arr[i][j].value * arr[i][j].x * arr[i][j].y;
+            }
+        }
+        return sum;
+    }
+
+    function Cell(x, y) {
+        this.x = x;
+        this.y = y;
+        this.value = 0;
+        this.newValue = 0;
+        this.init = function() {
+            this.value = Math.random() < KOEFF ? 1 : 0;
+            
+        };
+        this.getValue = function(type) {
+            return type == this.type ? this.value : 0;
+        },
+        this.step = function() {
+            if (this.value === 0 && this.newValue === 1){
+                document.body.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y].classList.add('cell');
+            }
+            else if (this.value === 1 && this.newValue === 0){
+                document.body.getElementsByClassName('row')[x].getElementsByClassName('stolb')[y].classList.remove('cell');
+            }
+            this.value = this.newValue;
+        },
+        this.calculate = function() {
+            var 
+                left = this.x > 0 ? this.x - 1 : maxX - 1,
+                right = this.x < maxX - 1 ? this.x + 1 : 0,
+                top = this.y > 0 ? this.y - 1 : maxY - 1,
+                bottom = this.y < maxY - 1 ? this.y + 1 : 0,
+                count = 0;
+            
+            count = arr[left][top].value + 
+                    arr[this.x][top].value + 
+                    arr[right][top].value + 
+                    arr[left][this.y].value + 
+                    arr[right][this.y].value + 
+                    arr[left][bottom].value + 
+                    arr[this.x][bottom].value + 
+                    arr[right][bottom].value;
+            if (this.value === 0 && count === 3) {
+                this.born();
+            }
+
+            if (this.value === 1 && count !== 2 && count !== 3) {
+                this.die();
+            }
+        },
+        this.born = function(type) {
+            this.newValue = 1;
+        },
+        this.die = function() {
+            this.newValue = 0;
+        }
+    }
+
+    function execute(action) {
+        for (var i = 0; i < maxX; i++) {
+            for (var j = 0; j < maxY; j++) {
+                arr[i][j][action]();
+            }
+        }
+    }
+
+    function create() {
+        for (var i = 0; i < maxX; i++) {
+            arr[i] = [];
+            for (var j = 0; j < maxY; j++) {
+                arr[i][j] = new Cell(i, j);
+                arr[i][j].init();
+            }
+        }
+        for (var i = 0; i < maxX; i++)
+        {
+            var table = document.body.getElementsByClassName('table')[0];
+            table.style.height = height+"px";
+            table.style.width = width+"px";
+            var row = document.createElement("div");
+            row.style.height = lineX+"px";
+            row.style.width = width+"px";
+            row.classList.add("row");
+            table.appendChild(row);
+            for (var j = 0; j < maxY; j++)
+            {
+                row = document.body.getElementsByClassName('row')[i];
+                var stolb = document.createElement("div");
+                stolb.classList.add("stolb");
+                stolb.style.height = lineX+"px";
+                stolb.style.width = lineY+"px";
+                if (arr[i][j].value > 0){
+                    stolb.classList.add("cell");
+                }
+                row.appendChild(stolb);
+            }
+        }
+        console.log(arr);
+    }
+
+    function start() {
+        create();
+    }        
+</script>
+</head>
+<body onload="start();">
+    <div class="table"></div>
+</body>
+</html>
